@@ -231,6 +231,15 @@ test('voices and speed from the settings reach stentor.py, and English voices ge
   expect(toasts[0]).toMatch(/^Now: /)
 })
 
+test('the labels follow the first named voice, as stentor.py does', { options: { voices: ' , ef_dora,af_heart' } }, async ($, on) => {
+  const { toasts } = world(on, [])
+  const row = await band($)
+
+  await row.press({ key: 'switch' })
+
+  expect(toasts[0]).toMatch(/^Ahora: /)
+})
+
 async function finishTurn($: Engine, answer: string) {
   await $.turn.complete({ answer, durationMs: 1, isAborted: false, turnId: 't1', reason: 'completed' } as never)
 }

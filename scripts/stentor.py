@@ -105,7 +105,8 @@ def model_files() -> tuple[Path, Path]:
 
 def configured_voices() -> list[str]:
     raw = os.environ.get("STENTOR_VOICES", "")
-    voices = [v.strip() for v in raw.split(",") if re.fullmatch(r"[a-z]{2}_[a-z0-9]+", v.strip())]
+    # Names are kept as written: a mistyped one is reported when it is read, not replaced.
+    voices = [v.strip() for v in raw.split(",") if v.strip()]
     return voices or list(DEFAULT_VOICES)
 
 

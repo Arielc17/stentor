@@ -74,10 +74,14 @@ class Voices(Isolated):
         self.assertEqual(stentor.current_voice(), "ef_dora")
         self.assertEqual(stentor.switch_voice(), "em_alex (voz de hombre)")
 
-    def test_configured_voices_drop_invalid_names(self) -> None:
-        os.environ["STENTOR_VOICES"] = "af_heart, ../x ,am_michael"
-        self.assertEqual(stentor.configured_voices(), ["af_heart", "am_michael"])
-        self.assertEqual(stentor.switch_voice(), "am_michael (male voice)")
+    def test_configured_voices_keep_every_name_and_skip_blanks(self) -> None:
+        os.environ["STENTOR_VOICES"] = "af_heart, ef-dora ,,am_michael"
+        self.assertEqual(stentor.configured_voices(), ["af_heart", "ef-dora", "am_michael"])
+        self.assertEqual(stentor.switch_voice(), "ef-dora (voz de mujer)")
+
+    def test_only_blank_voices_mean_the_default_ones(self) -> None:
+        os.environ["STENTOR_VOICES"] = " , "
+        self.assertEqual(stentor.configured_voices(), ["em_alex", "ef_dora"])
 
     def test_a_chosen_voice_no_longer_configured_falls_back_to_the_first(self) -> None:
         os.environ["STENTOR_VOICES"] = "ef_dora"
@@ -329,6 +333,14 @@ class ReaderFailures(Isolated):
 
         self.assertEqual(done.returncode, 1)
         self.assertIn("ef_dorra", done.stderr)
+        self.assertFalse(stentor.pid_file().exists())
+
+    def test_speak_with_a_mistyped_voice_names_it_instead_of_reading_with_another(self) -> None:
+        fake_models(self.folder)
+        done = self.run_speak("ef-dora")
+
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("La voz ef-dora no existe", done.stderr)
         self.assertFalse(stentor.pid_file().exists())
 
     def test_the_reader_writes_its_errors_to_a_log(self) -> None:

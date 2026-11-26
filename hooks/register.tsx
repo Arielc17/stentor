@@ -146,7 +146,9 @@ async function runStentor($: EngineInterface, settings: Settings, args: string[]
 export const register: Register = (on, options) => {
   const voices = typeof options.voices === 'string' && options.voices.trim() !== '' ? options.voices : DEFAULT_VOICES
   const speed = typeof options.speed === 'number' ? options.speed : 1
-  const text = voices.trim().startsWith('e') ? LABELS.es : LABELS.en
+  // Like stentor.py, the first named voice sets the language.
+  const firstVoice = voices.split(',').map(v => v.trim()).find(v => v !== '') ?? ''
+  const text = firstVoice.startsWith('e') ? LABELS.es : LABELS.en
   const settings: Settings = {
     env: { STENTOR_VOICES: voices, STENTOR_SPEED: String(speed) },
     notInstalled: text.notInstalled,
