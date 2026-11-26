@@ -1,0 +1,38 @@
+{
+  "name": "stentor",
+  "displayName": "Stentor",
+  "icon": "./assets/icon.png",
+  "version": "1.0.0",
+  "description": "Listen to Claude Code's answers: a free voice that runs on your computer reads them aloud. Key 1 reads the reply on screen, a play mark on hover reads any reply, 2 stops, 3 switches the voice",
+  "license": "MIT",
+  "author": {
+    "name": "Arielc17",
+    "url": "https://github.com/Arielc17"
+  },
+  "homepage": "https://github.com/Arielc17/stentor",
+  "repository": "https://github.com/Arielc17/stentor",
+  "keywords": [
+    "voice",
+    "tts",
+    "text-to-speech",
+    "read-aloud",
+    "accessibility",
+    "kokoro",
+    "offline"
+  ],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "voices": {
+      "type": "string",
+      "title": "Voices",
+      "description": "Comma-separated Kokoro voices that key 3 cycles through. The first letter sets the language: e Spanish, a US English, b British English, f French, i Italian, p Portuguese, h Hindi, j Japanese, z Chinese. Examples: em_alex,ef_dora or af_heart,am_michael",
+      "default": "em_alex,ef_dora"
+    },
+    "speed": {
+      "type": "number",
+      "title": "Speed",
+      "description": "Speech speed from 0.5 to 2.0",
+      "default": 1
+    }
+  }
+}

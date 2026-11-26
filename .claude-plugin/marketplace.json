@@ -1,0 +1,15 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "stentor",
+  "description": "Stentor: listen to Claude Code's answers with a free voice that runs on your computer",
+  "owner": { "name": "Arielc17", "url": "https://github.com/Arielc17" },
+  "plugins": [
+    {
+      "name": "stentor",
+      "source": "./",
+      "description": "Reads Claude Code's answers aloud with a free local Kokoro voice",
+      "category": "productivity",
+      "homepage": "https://github.com/Arielc17/stentor"
+    }
+  ]
+}
