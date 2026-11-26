@@ -1,0 +1,11 @@
+name: Idea
+description: Suggest a change or a new feature.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like Stentor to do?
+      description: Describe the situation and what you miss in it.
+    validations:
+      required: true

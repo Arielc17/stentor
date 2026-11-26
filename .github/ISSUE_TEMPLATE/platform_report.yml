@@ -1,0 +1,33 @@
+name: Platform report
+description: Tell us how Stentor went on macOS or Windows, even if everything worked.
+labels: [platform]
+body:
+  - type: dropdown
+    id: system
+    attributes:
+      label: System
+      options: [macOS, Windows, Linux (other distribution or audio setup)]
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: System version, `claude --version`, Python version and terminal.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: What worked
+      options:
+        - label: The installer finished
+        - label: Key 1 reads the answer aloud
+        - label: Key 2 stops the reading
+        - label: Key 3 switches the voice
+        - label: The ▶ mark on hover reads that answer
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Anything that failed or felt wrong, with the messages you saw.

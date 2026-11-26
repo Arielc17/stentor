@@ -1,0 +1,32 @@
+name: Bug report
+description: Something does not work as described in the README.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: system
+    attributes:
+      label: System
+      options: [Linux, macOS, Windows]
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Output of `claude --version` and `python3 --version` (or `py -3 --version` on Windows), and your terminal.
+      placeholder: 2.1.332 (Claude Code), Python 3.12.7, kitty
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: reader.log
+      description: If nothing sounds, the last lines of `reader.log` from the state folder.
+      render: text
