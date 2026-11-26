@@ -2,7 +2,7 @@
   "name": "stentor",
   "displayName": "Stentor",
   "icon": "./assets/icon.png",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Listen to Claude Code's answers: a free voice that runs on your computer reads them aloud. Key 1 reads the reply on screen, a play mark on hover reads any reply, 2 stops, 3 switches the voice",
   "license": "MIT",
   "author": {
