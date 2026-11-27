@@ -42,18 +42,21 @@ You need a recent Claude Code (tested with 2.1.332) and Python 3.10 to 3.14.
    /plugin install stentor@stentor
    ```
 
-2. **Install the voices** (once, about 120 MB). Type `/stentor:install` and run the line it prints
-   in a terminal. It looks like this:
+2. **Install the voices** (once, about 120 MB). Type `/stentor:install`. The progress shows under
+   the prompt (*Stentor: downloading voices (1 of 2)… 60%*) while you keep working.
 
-   ```
-   python3 "<plugin folder>/scripts/install.py"      # Linux and macOS
-   py -3 "<plugin folder>\scripts\install.py"        # Windows
-   ```
-
-3. **Listen.** Restart Claude Code (or run `/reload-plugins`) and press `1`.
+3. **Listen.** When it says *Voices installed: press 1 to listen*, press `1`.
 
 The installer creates a private Python environment, installs `kokoro-onnx`, and downloads the two
 model files, checking their SHA-256. Running it again repairs whatever is missing.
+
+You can also run it in a terminal, for example when `/stentor:install` cannot finish (its message
+then shows the exact line):
+
+```
+python3 "<plugin folder>/scripts/install.py"      # Linux and macOS
+py -3 "<plugin folder>\scripts\install.py"        # Windows
+```
 
 ## Keys
 
@@ -116,7 +119,9 @@ whether it worked or not.
 
 | What you see | What to do |
 | --- | --- |
-| *Voices not installed yet: type /stentor:install* | Run the line that `/stentor:install` prints, then `/reload-plugins`. |
+| *Voices not installed yet: type /stentor:install* | Type `/stentor:install` and wait for *Voices installed*. |
+| *Could not install the voices: …* | The rest of the message says why. Fix that and type `/stentor:install` again. |
+| *Stentor needs Python 3.10 or newer* | Install Python from [python.org](https://www.python.org/downloads/) and type `/stentor:install` again. |
 | *There is no voice named …* | Check the **Voices** setting for a typo. |
 | *… is not a private folder of yours* | Another user or a link owns the state folder: remove it or set `STENTOR_STATE`. |
 | A download fails on macOS with `CERTIFICATE_VERIFY_FAILED` | Run `Install Certificates.command` from the Python folder in Applications, then the installer again. |

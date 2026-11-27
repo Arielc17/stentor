@@ -36,18 +36,21 @@ Necesitas un Claude Code reciente (probado con 2.1.332) y Python 3.10 a 3.14.
    /plugin install stentor@stentor
    ```
 
-2. **Instala las voces** (una sola vez, unos 120 MB). Escribe `/stentor:install` y ejecuta en una
-   terminal la línea que te muestra. Se ve así:
+2. **Instala las voces** (una sola vez, unos 120 MB). Escribe `/stentor:install`. El avance se ve
+   debajo del cuadro de texto (*Stentor: descargando voces (1 de 2)… 60%*) mientras sigues trabajando.
 
-   ```
-   python3 "<carpeta del plugin>/scripts/install.py"      # Linux y macOS
-   py -3 "<carpeta del plugin>\scripts\install.py"        # Windows
-   ```
-
-3. **Escucha.** Reinicia Claude Code (o usa `/reload-plugins`) y presiona `1`.
+3. **Escucha.** Cuando diga *Voces instaladas: presiona 1 para escuchar*, presiona `1`.
 
 El instalador crea un entorno de Python privado, instala `kokoro-onnx` y descarga los dos archivos
 del modelo, comprobando su SHA-256. Si lo vuelves a ejecutar, repara lo que falte.
+
+También puedes ejecutarlo en una terminal, por ejemplo si `/stentor:install` no logra terminar (su
+mensaje muestra entonces la línea exacta):
+
+```
+python3 "<carpeta del plugin>/scripts/install.py"      # Linux y macOS
+py -3 "<carpeta del plugin>\scripts\install.py"        # Windows
+```
 
 ## Teclas
 
@@ -102,7 +105,9 @@ haya funcionado o no.
 
 | Lo que ves | Qué hacer |
 | --- | --- |
-| *Falta instalar las voces: escribe /stentor:install* | Ejecuta la línea que muestra `/stentor:install` y luego `/reload-plugins`. |
+| *Falta instalar las voces: escribe /stentor:install* | Escribe `/stentor:install` y espera a que diga *Voces instaladas*. |
+| *No se pudieron instalar las voces: …* | El resto del mensaje dice por qué. Corrígelo y vuelve a escribir `/stentor:install`. |
+| *Stentor necesita Python 3.10 o más nuevo* | Instala Python desde [python.org](https://www.python.org/downloads/) y vuelve a escribir `/stentor:install`. |
 | *La voz … no existe* | Revisa que la opción **Voices** esté bien escrita. |
 | *… no es una carpeta privada tuya* | La carpeta de estado es de otro usuario o es un enlace: bórrala o define `STENTOR_STATE`. |
 | En macOS una descarga falla con `CERTIFICATE_VERIFY_FAILED` | Ejecuta `Install Certificates.command` de la carpeta de Python en Aplicaciones y vuelve a correr el instalador. |

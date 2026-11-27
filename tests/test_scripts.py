@@ -207,6 +207,73 @@ class Installer(Isolated):
 
 
 
+class FakeResponse(io.BytesIO):
+    """A download that says its size, as GitHub's release server does."""
+
+    def __init__(self, body: bytes) -> None:
+        super().__init__(body)
+        self.headers = {"Content-Length": str(len(body))}
+
+
+class InstallerProgress(Isolated):
+    def run_main(self, argv: list[str]) -> str:
+        """main() with every slow step stood in for; what it wrote on stdout."""
+        def fake_download(name, expected, folder, on_percent=None):
+            for percent in (50, 100):
+                if on_percent:
+                    on_percent(percent)
+
+        out = io.StringIO()
+        with mock.patch.object(install, "ensure_venv", return_value=Path("py")), \
+                mock.patch.object(install.subprocess, "run"), \
+                mock.patch.object(install, "needs_sounddevice", return_value=False), \
+                mock.patch.object(install, "download", side_effect=fake_download), \
+                mock.patch("sys.stdout", new=out), \
+                mock.patch("sys.stderr", new=io.StringIO()):
+            install.main(argv)
+        return out.getvalue()
+
+    def test_progress_mode_writes_each_step_as_one_json_line(self) -> None:
+        import json
+
+        lines = [json.loads(line) for line in self.run_main(["--progress"]).splitlines()]
+
+        self.assertEqual(lines, [
+            {"step": "environment"},
+            {"step": "packages"},
+            {"step": "voices", "file": 1, "of": 2, "percent": 50},
+            {"step": "voices", "file": 1, "of": 2, "percent": 100},
+            {"step": "voices", "file": 2, "of": 2, "percent": 50},
+            {"step": "voices", "file": 2, "of": 2, "percent": 100},
+            {"step": "done"},
+        ])
+
+    def test_without_progress_the_terminal_output_stays_as_it_was(self) -> None:
+        output = self.run_main([])
+
+        self.assertIn("Data folder:", output)
+        self.assertIn("Done. Press 1 in Claude Code to listen.", output)
+        self.assertNotIn('{"step"', output)
+
+    def test_progress_skips_small_steps_but_always_shows_the_end(self) -> None:
+        out = io.StringIO()
+        progress = install.Progress(out)
+        for percent in (1, 2, 3, 7, 9, 100):
+            progress.voices(1, 2, percent)
+
+        self.assertEqual([line.split('"percent": ')[1].rstrip("}") for line in out.getvalue().splitlines()],
+                         ["1", "7", "100"])
+
+    def test_a_download_reports_how_far_it_got(self) -> None:
+        body = b"x" * (3 << 20)
+        seen: list[int] = []
+        with mock.patch.object(install.urllib.request, "urlopen", return_value=FakeResponse(body)):
+            install.download("m.bin", hashlib.sha256(body).hexdigest(), self.folder, seen.append)
+
+        self.assertEqual(seen, [33, 66, 100])
+        self.assertEqual(self.folder.joinpath("m.bin").read_bytes(), body)
+
+
 def fake_models(folder: Path, voices: tuple[str, ...] = ("ef_dora", "em_alex")) -> None:
     """Model files in place: an empty model and a voices archive holding these names."""
     import zipfile

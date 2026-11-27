@@ -4,6 +4,15 @@ All notable changes to Stentor are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- `/stentor:install` installs the voices itself and shows the progress under the prompt, so no
+  terminal is needed. The keys work as soon as it says the voices are installed.
+- `install.py --progress` reports each step as one JSON line; without it the terminal output is
+  unchanged.
+
 ## [1.0.1] - 2026-11-26
 
 ### Fixed

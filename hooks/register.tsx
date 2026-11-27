@@ -21,9 +21,16 @@ const LABELS = {
     nothing: 'Todavía no hay respuesta para leer',
     now: 'Ahora: ',
     notInstalled: 'Falta instalar las voces: escribe /stentor:install',
-    install: 'Para instalar las voces (una sola vez, unos 120 MB), ejecuta en una terminal:',
-    installAfter: 'Luego reinicia Claude Code o usa /reload-plugins.',
-    commandDescription: 'Muestra cómo instalar las voces de Stentor',
+    installing: 'Instalando las voces de Stentor (una sola vez, unos 120 MB). El avance se ve debajo del cuadro de texto.',
+    alreadyInstalling: 'Las voces ya se están instalando; el avance se ve debajo del cuadro de texto.',
+    stepEnvironment: 'Stentor: preparando Python…',
+    stepPackages: 'Stentor: instalando kokoro-onnx…',
+    stepVoices: (file: number, of: number, percent: number) => `Stentor: descargando voces (${file} de ${of})… ${percent}%`,
+    installed: 'Voces instaladas: presiona 1 para escuchar',
+    installFailed: 'No se pudieron instalar las voces: ',
+    inTerminal: 'También puedes ejecutar en una terminal: ',
+    noPython: 'Stentor necesita Python 3.10 o más nuevo: https://www.python.org/downloads/',
+    commandDescription: 'Instala las voces de Stentor',
   },
   en: {
     band: 'Voice: ',
@@ -34,9 +41,16 @@ const LABELS = {
     nothing: 'No answer to read yet',
     now: 'Now: ',
     notInstalled: 'Voices not installed yet: type /stentor:install',
-    install: 'To install the voices (once, about 120 MB), run in a terminal:',
-    installAfter: 'Then restart Claude Code or use /reload-plugins.',
-    commandDescription: 'Shows how to install the Stentor voices',
+    installing: 'Installing the Stentor voices (once, about 120 MB). The progress shows under the prompt.',
+    alreadyInstalling: 'The voices are already being installed; the progress shows under the prompt.',
+    stepEnvironment: 'Stentor: preparing Python…',
+    stepPackages: 'Stentor: installing kokoro-onnx…',
+    stepVoices: (file: number, of: number, percent: number) => `Stentor: downloading voices (${file} of ${of})… ${percent}%`,
+    installed: 'Voices installed: press 1 to listen',
+    installFailed: 'Could not install the voices: ',
+    inTerminal: 'You can also run in a terminal: ',
+    noPython: 'Stentor needs Python 3.10 or newer: https://www.python.org/downloads/',
+    commandDescription: 'Installs the Stentor voices',
   },
 }
 
@@ -81,7 +95,10 @@ function blockOnScreen(rows: Row[]): string | undefined {
   return candidates[0]?.block.text
 }
 
-type Paths = { script: string; python: string; installLine: string }
+type Labels = (typeof LABELS)['es']
+
+/** The Python that runs install.py, in the order to try: the first one that starts. */
+type Paths = { script: string; python: string; installer: string; systemPythons: string[][]; installLine: string }
 
 /** An environment variable's value, with an empty one counted as unset. */
 const set = (value: string | undefined) => (value === '' ? undefined : value)
@@ -97,6 +114,8 @@ async function paths($: EngineInterface): Promise<Paths> {
     return {
       script: `${root}\\scripts\\stentor.py`,
       python: `${data}\\venv\\Scripts\\python.exe`,
+      installer: `${root}\\scripts\\install.py`,
+      systemPythons: [['py', '-3'], ['python']],
       installLine: `py -3 "${root}\\scripts\\install.py"`,
     }
   }
@@ -107,6 +126,8 @@ async function paths($: EngineInterface): Promise<Paths> {
   return {
     script: `${root}/scripts/stentor.py`,
     python: isWindows ? `${data}\\venv\\Scripts\\python.exe` : `${data}/venv/bin/python3`,
+    installer: `${root}/scripts/install.py`,
+    systemPythons: isWindows ? [['py', '-3'], ['python']] : [['python3'], ['python']],
     installLine: `${isWindows ? 'py -3' : 'python3'} "${root}/scripts/install.py"`,
   }
 }
@@ -143,6 +164,89 @@ async function runStentor($: EngineInterface, settings: Settings, args: string[]
   return result
 }
 
+type Step = { step?: string; file?: number; of?: number; percent?: number }
+
+/** The progress line for one step install.py --progress reported, or undefined for none. */
+function stepLine(text: Labels, { step, file = 1, of = 1, percent = 0 }: Step): string | undefined {
+  switch (step) {
+    case 'environment':
+      return text.stepEnvironment
+    case 'packages':
+      return text.stepPackages
+    case 'voices':
+      return text.stepVoices(file, of, percent)
+    default:
+      return undefined
+  }
+}
+
+/**
+ * Runs install.py --progress with one system Python, showing each step on the
+ * status line; 'not-started' when that Python is not on this machine.
+ */
+async function follow($: EngineInterface, text: Labels, argv: string[], installLine: string): Promise<'not-started' | 'ended'> {
+  const child = $.process.spawn({ argv, env: { PYTHONUNBUFFERED: '1' } })
+  let started = false
+  let pending = ''
+  let errors = ''
+  let code: number | null = null
+  try {
+    for (;;) {
+      const piece = await child.next()
+      started = true
+      if (piece.done) {
+        code = piece.value.code
+        break
+      }
+      if (piece.value.stream === 'stderr') {
+        errors = (errors + piece.value.text).slice(-4000)
+        continue
+      }
+      const lines = (pending + piece.value.text).split('\n')
+      pending = lines.pop() ?? ''
+      for (const line of lines) {
+        let step: Step
+        try {
+          step = JSON.parse(line) as Step
+        } catch {
+          continue
+        }
+        const shown = stepLine(text, step)
+        if (shown !== undefined) {
+          $.ui.status(shown)
+        }
+      }
+    }
+  } catch (error) {
+    if (!started) {
+      return 'not-started'
+    }
+    errors += `\n${String(error)}`
+  }
+  $.ui.status(undefined)
+  if (code === 0) {
+    $.ui.toast(text.installed, { timeoutMs: 10000 })
+  } else {
+    const reason = errors.trim().split('\n').at(-1)?.trim() ?? ''
+    $.ui.toast(`${text.installFailed}${reason}\n${text.inTerminal}${installLine}`, { timeoutMs: 30000 })
+  }
+
+  return 'ended'
+}
+
+async function install($: EngineInterface, text: Labels) {
+  const { installer, systemPythons, installLine } = await paths($)
+  for (const python of systemPythons) {
+    if ((await follow($, text, [...python, installer, '--progress'], installLine)) === 'ended') {
+      return
+    }
+  }
+  $.ui.toast(text.noPython, { timeoutMs: 15000 })
+}
+
+/** One install at a time; a reload ends the running one with the module. */
+let installing = false
+
 export const register: Register = (on, options) => {
   const voices = typeof options.voices === 'string' && options.voices.trim() !== '' ? options.voices : DEFAULT_VOICES
   const speed = typeof options.speed === 'number' ? options.speed : 1
@@ -161,10 +265,17 @@ export const register: Register = (on, options) => {
     return next(e)
   })
 
+  // The install runs on after the command answers, so the person can keep working.
   on('command.run', { command: 'install' }, async $ => {
-    const { installLine } = await paths($)
+    if (installing) {
+      return { text: text.alreadyInstalling, isTextDisplayOnly: true }
+    }
+    installing = true
+    void install($, text).finally(() => {
+      installing = false
+    })
 
-    return { text: `${text.install}\n\n  ${installLine}\n\n${text.installAfter}`, isTextDisplayOnly: true }
+    return { text: text.installing, isTextDisplayOnly: true }
   })
 
   on('turn.complete', async ($, e, next) => {
