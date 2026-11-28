@@ -4,7 +4,7 @@ All notable changes to Stentor are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.1.0] - 2026-11-28
 
 ### Changed
 
@@ -33,5 +33,6 @@ All notable changes to Stentor are listed here. The format follows
 - Pauses and resumes music and video players on Linux through MPRIS.
 - Voices and speed settings in `/plugin`.
 
+[1.1.0]: https://github.com/Arielc17/stentor/releases/tag/v1.1.0
 [1.0.1]: https://github.com/Arielc17/stentor/releases/tag/v1.0.1
 [1.0.0]: https://github.com/Arielc17/stentor/releases/tag/v1.0.0
